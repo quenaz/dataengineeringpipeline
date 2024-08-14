@@ -1,0 +1,6 @@
+__pycache__/
+.venv/
+.vscode/
+streamer/data/train.csv
+streamer/data/less_data.csv
+data_lake/*.parquet

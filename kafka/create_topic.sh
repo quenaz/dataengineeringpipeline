@@ -1,0 +1,2 @@
+docker exec -it $(docker-compose ps -q kafka) kafka-topics --create --topic nyc_taxi_fare --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1
+docker exec -it $(docker-compose ps -q kafka) kafka-topics --list --bootstrap-server localhost:9092

@@ -27,7 +27,7 @@
 
 2. **Event Streaming Layer**:
 
-   - **Kafka/RabbitMQ**:
+   - **Kafka**:
      - Manages the message queue for the streaming data.
      - Ensures reliable delivery to the consumer.
 
