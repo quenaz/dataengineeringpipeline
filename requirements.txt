@@ -1,0 +1,9 @@
+flask
+flask-sse
+pyarrow
+pandas
+apache-airflow
+kafka-python
+pytest
+pytest-flask
+pyspark

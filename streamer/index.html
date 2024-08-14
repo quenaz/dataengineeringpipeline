@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kafka SSE Consumer</title>
+</head>
+<body>
+    <h1>Kafka Events</h1>
+    <div id="events"></div>
+
+    <script type="text/javascript">
+        const evtSource = new EventSource('/consume');
+        const eventContainer = document.getElementById('events');
+
+        evtSource.onmessage = function(event) {
+            const newElement = document.createElement("div");
+            newElement.innerHTML = `Event: ${event.data}`;
+            eventContainer.appendChild(newElement);
+        };
+    </script>
+</body>
+</html>
