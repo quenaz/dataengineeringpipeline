@@ -6,11 +6,11 @@
 
 - **Event Streaming**: Use **Kafka** to handle the streaming of data.
 
-- **Event Consumers**: Flask application to consume events and apply filtering based on datetime and place.
+- **Event Consumers**: Python application to consume events and apply filtering based on datetime and place.
 
-- **Data Storage**: Store the filtered data in **Parquet format** within a structured data lake.
+- **Data Storage**: Store the filtered data in **Parquet format**.
 
-- **Batch Processing**: Use **Apache Spark** (Scala) for batch processing to consolidate and analyze data based on datetime or place.
+- **Batch Processing**: Use **Apache Spark** (Scala) for batch processing to consolidate and transform data.
 
 - **Orchestration**: Use **Apache Airflow** for orchestrating the data pipelines.
 
@@ -33,7 +33,7 @@
 
 3. **Consumer Application**:
 
-   - **Language**: Python (Flask)
+   - **Language**: Python
    - **Functionality**:
      - Consumes streaming data.
      - Applies filters (datetime, place).
@@ -42,8 +42,7 @@
 4. **Data Storage Layer**:
 
    - **Data Lake**:
-     - Stores the Parquet files in a structured format.
-     - Organizes data by datetime and place.
+     - Stores the Parquet files when filter is applied.
 
 5. **Batch Processing**:
 
