@@ -81,7 +81,10 @@ def main():
     # Convert command-line arguments to filters
     # Example filter
     # date_filter = (datetime(2013, 6, 1), datetime(2015, 6, 1))  # Filter by date range
+    # --start-date 2013-06-01 --end-date 2015-06-01
+    #
     # location_filter = (-74.0, -73.0, 40.5, 41.0)  # Filter by longitude and latitude range
+    # --longitude-min -74.0 --longitude.max -73.0 --latitude-min 40.5 --latitude-max 41.0
 
     date_filter = None
     if args.start_date and args.end_date:

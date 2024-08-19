@@ -7,11 +7,12 @@ object NYC_Taxi_Fare_Processing {
     // Initialize SparkSession
     val spark = SparkSession.builder()
       .appName("NYC Taxi Fare Processing")
+      .config("spark.sql.warehouse.dir", "C:\\Temp\\Spark")
       .master("local[*]")
       .getOrCreate()
 
     // Define the data lake path
-    val dataLakePath = "data_lake"
+    val dataLakePath = "C:\\Temp\\serasa\\project\\data_lake"
 
     // Read Parquet files from the data lake
     val taxiFaresDF = spark.read.parquet(s"$dataLakePath/*/*/*/")

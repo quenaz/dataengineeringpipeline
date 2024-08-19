@@ -4,3 +4,10 @@ __pycache__/
 streamer/data/train.csv
 streamer/data/less_data.csv
 data_lake/*.parquet
+
+.bsp/
+.metals/
+.scala-build/
+.bloop/
+.bsp/
+target/
