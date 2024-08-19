@@ -10,8 +10,8 @@ object BatchProcessingApp {
       .getOrCreate()
 
     // Path to the data lake where Parquet files are stored
-    val inputPath = "file:///C:/Temp/serasa/project/data_lake/data_0_to_999.parquet"
-    val outputPath = "file:///C:/Temp/serasa/project/data_lake/dataTransformation/"
+    val inputPath = s"C:/Temp/serasa/project/data_lake"
+    val outputPath = s"file:///C:/Temp/serasa/project/data_lake/dataTransformation/"
 
     // Perform batch processing
     processBatchData(spark, inputPath, outputPath)
@@ -21,7 +21,7 @@ object BatchProcessingApp {
 
   def processBatchData(spark: SparkSession, inputPath: String, outputPath: String): Unit = {
     // Step 1: Read Parquet files from the data lake
-    val rawData: DataFrame = spark.read.parquet(inputPath)
+    val rawData: DataFrame = spark.read.parquet(s"$inputPath/")
 
     // Step 2: Perform data transformations
     val transformedData: DataFrame = rawData
@@ -55,39 +55,5 @@ object BatchProcessingApp {
         e.printStackTrace()
     }
   }
+
 }
-
-
-// import org.apache.spark.sql.{SparkSession, DataFrame}
-// import org.apache.spark.sql.functions._
-
-// object NYC_Taxi_Fare_Processing {
-
-//   def main(args: Array[String]): Unit = {
-//     // Initialize SparkSession
-//     val spark = SparkSession.builder()
-//       .appName("NYC Taxi Fare Processing")
-//       .config("spark.sql.warehouse.dir", "C:\\Temp\\Spark")
-//       .master("local[*]")
-//       .getOrCreate()
-
-//     // Define the data lake path
-//     val dataLakePath = "C:\\Temp\\serasa\\project\\data_lake"
-
-//     // Read Parquet files from the data lake
-//     val taxiFaresDF = spark.read.parquet(s"$dataLakePath/*/*/*/")
-
-//     // Transformation: Calculate the average fare amount per place (borough)
-//     val avgFareByPlaceDF = taxiFaresDF
-//       .groupBy("place")
-//       .agg(avg("fare_amount").alias("avg_fare"))
-
-//     // Write the processed data back to the data lake
-//     avgFareByPlaceDF.write
-//       .mode("overwrite")
-//       .parquet("data_lake/nyc_taxi_fares_summary/avg_fare_by_place")
-
-//     // Stop the Spark session
-//     spark.stop()
-//   }
-// }

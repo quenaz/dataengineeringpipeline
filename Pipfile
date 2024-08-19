@@ -9,6 +9,7 @@ flask-sse = "*"
 pandas = "*"
 pyarrow = "*"
 kafka-python = "*"
+apache-airflow = "==2.3.3"
 
 [dev-packages]
 ipykernel = "*"
