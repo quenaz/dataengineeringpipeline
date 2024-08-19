@@ -2,9 +2,10 @@ import os
 import json
 import argparse
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 from kafka import KafkaConsumer
-from datetime import datetime
 
 DATA_LAKE_FOLDER='..\\data_lake'
 BATCH_SIZE = 1000
@@ -62,7 +63,24 @@ def save_to_parquet(df, filename):
     """
     Save the DataFrame to a Parquet file.
     """
-    df.to_parquet(filename, engine='pyarrow', index=False)
+    # Convert the DataFrame to an Apache Arrow Table
+    table = pa.Table.from_pandas(df)
+    import pyarrow.compute as pc
+
+    # Convert TIMESTAMP(NANOS,true) to TIMESTAMP(MILLIS,true)
+    table = table.append_column(
+        'pickup_datetime_millis',
+        pc.cast(table['pickup_datetime'], pa.timestamp('ms'))
+    ).drop(['pickup_datetime'])
+
+    # Define the new column names
+    new_column_names = [name if name != 'pickup_datetime_millis' else 'pickup_datetime' for name in table.column_names]
+
+    # Rename the columns
+    table = table.rename_columns(new_column_names)
+    
+    # Save to parquet format
+    pq.write_table(table, filename)
     print(f"Data saved to {filename}")
 
 def main():
@@ -131,7 +149,7 @@ def main():
 
             if not filtered_data.empty:
                 # Create a filename from the date strings
-                filename = f"data_{COUNTER}_to_{COUNTER+batch_size+1}.parquet"
+                filename = f"data_{COUNTER}_to_{COUNTER+batch_size-1}.parquet"
 
                 print("Generated filename:", filename)
 

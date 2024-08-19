@@ -4,7 +4,7 @@ __pycache__/
 streamer/data/train.csv
 streamer/data/less_data.csv
 data_lake/*.parquet
-
+dataTransformation/
 .bsp/
 .metals/
 .scala-build/
