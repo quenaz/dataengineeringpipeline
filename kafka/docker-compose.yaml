@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 version: '3.8'
 services:
   zookeeper:
@@ -10,10 +11,27 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
+=======
+version: '3.7'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+>>>>>>> 05cd6a00892a37481f950065485cff3a3292e765
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+<<<<<<< HEAD
       # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -39,3 +57,12 @@ services:
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     depends_on:
       - kafka
+=======
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+    command: >
+      sh -c "
+      kafka-topics --create --topic nyc_taxi_fares --partitions 3 --replication-factor 1 --if-not-exists --zookeeper zookeeper:2181
+      && kafka-server-start /etc/kafka/server.properties
+      "
+>>>>>>> 05cd6a00892a37481f950065485cff3a3292e765

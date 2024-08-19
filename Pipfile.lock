@@ -1,7 +1,11 @@
 {
     "_meta": {
         "hash": {
+<<<<<<< HEAD
             "sha256": "fe4f9ed54101d20863b7c19917772c1c5d552792552fedbcfaf61c451894d821"
+=======
+            "sha256": "b370ed7b8eeaf1c7ab249838e9952c4613a82ab4d7de0db6a85e26a91177db65"
+>>>>>>> 05cd6a00892a37481f950065485cff3a3292e765
         },
         "pipfile-spec": 6,
         "requires": {
@@ -88,6 +92,7 @@
             "markers": "python_version >= '3.7'",
             "version": "==3.1.4"
         },
+<<<<<<< HEAD
         "kafka-python": {
             "hashes": [
                 "sha256:04dfe7fea2b63726cd6f3e79a2d86e709d608d74406638c5da33a01d45a9d7e3",
@@ -96,6 +101,8 @@
             "index": "pypi",
             "version": "==2.0.2"
         },
+=======
+>>>>>>> 05cd6a00892a37481f950065485cff3a3292e765
         "markupsafe": {
             "hashes": [
                 "sha256:00e046b6dd71aa03a41079792f8473dc494d564611a8f89bbbd7cb93295ebdcf",
@@ -162,6 +169,7 @@
             "markers": "python_version >= '3.7'",
             "version": "==2.1.5"
         },
+<<<<<<< HEAD
         "numpy": {
             "hashes": [
                 "sha256:04640dab83f7c6c85abf9cd729c5b65f1ebd0ccf9de90b270cd61935eef0197f",
@@ -284,6 +292,8 @@
             ],
             "version": "==2024.1"
         },
+=======
+>>>>>>> 05cd6a00892a37481f950065485cff3a3292e765
         "redis": {
             "hashes": [
                 "sha256:0c5b10d387568dfe0698c6fad6615750c24170e548ca2deac10c649d463e9870",
@@ -297,6 +307,7 @@
                 "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926",
                 "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"
             ],
+<<<<<<< HEAD
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==1.16.0"
         },
@@ -308,6 +319,11 @@
             "markers": "python_version >= '2'",
             "version": "==2024.1"
         },
+=======
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
+            "version": "==1.16.0"
+        },
+>>>>>>> 05cd6a00892a37481f950065485cff3a3292e765
         "werkzeug": {
             "hashes": [
                 "sha256:097e5bfda9f0aba8da6b8545146def481d06aa7d3266e7448e2cccf67dd8bd18",
@@ -325,6 +341,7 @@
             "version": "==3.20.0"
         }
     },
+<<<<<<< HEAD
     "develop": {
         "asttokens": {
             "hashes": [
@@ -748,4 +765,7 @@
             "version": "==3.20.0"
         }
     }
+=======
+    "develop": {}
+>>>>>>> 05cd6a00892a37481f950065485cff3a3292e765
 }
