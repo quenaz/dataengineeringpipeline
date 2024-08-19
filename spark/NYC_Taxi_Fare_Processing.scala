@@ -11,11 +11,7 @@ object NYC_Taxi_Fare_Processing {
       .getOrCreate()
 
     // Define the data lake path
-<<<<<<< HEAD
     val dataLakePath = "data_lake"
-=======
-    val dataLakePath = "data_lake/nyc_taxi_fares"
->>>>>>> 05cd6a00892a37481f950065485cff3a3292e765
 
     // Read Parquet files from the data lake
     val taxiFaresDF = spark.read.parquet(s"$dataLakePath/*/*/*/")

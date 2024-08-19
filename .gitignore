@@ -1,11 +1,6 @@
-<<<<<<< HEAD
 __pycache__/
 .venv/
 .vscode/
 streamer/data/train.csv
 streamer/data/less_data.csv
 data_lake/*.parquet
-=======
-.venv/
-streamer/data/train.csv
->>>>>>> 05cd6a00892a37481f950065485cff3a3292e765

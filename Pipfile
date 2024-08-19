@@ -6,17 +6,12 @@ name = "pypi"
 [packages]
 flask = "*"
 flask-sse = "*"
-<<<<<<< HEAD
 pandas = "*"
 pyarrow = "*"
 kafka-python = "*"
 
 [dev-packages]
 ipykernel = "*"
-=======
-
-[dev-packages]
->>>>>>> 05cd6a00892a37481f950065485cff3a3292e765
 
 [requires]
 python_version = "3.8"
