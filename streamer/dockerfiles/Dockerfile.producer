@@ -1,0 +1,17 @@
+# Dockerfile.producer
+FROM python:3.8-slim
+
+WORKDIR /app
+
+# Create 'data' directory
+RUN mkdir -p /app/data
+
+COPY ./streamer/producer.py /app/producer.py
+COPY ./streamer/data/less_data.csv /app/data
+
+# Install any necessary dependencies
+COPY ./streamer/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# The entrypoint for running the producer
+ENTRYPOINT ["python", "producer.py"]

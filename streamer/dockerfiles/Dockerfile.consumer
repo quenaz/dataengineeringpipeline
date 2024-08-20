@@ -1,0 +1,13 @@
+# Dockerfile.consumer
+FROM python:3.8-slim
+
+WORKDIR /app
+
+COPY ./streamer/consumer.py /app/consumer.py
+
+# Install any necessary dependencies
+COPY ./streamer/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# The entrypoint for running the consumer with arguments
+ENTRYPOINT ["python", "consumer.py"]

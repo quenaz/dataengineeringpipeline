@@ -1,33 +1,68 @@
-version: '3.7'
-
+version: '3.8'
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.5.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.5.0
     environment:
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
     ports:
       - "9092:9092"
     depends_on:
       - zookeeper
 
-  streamer:
-    build: ./streamer  # TODO: Dockerfile for Flask in ./streamer directory
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
     ports:
-      - "5000:5000"
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     depends_on:
       - kafka
 
-  spark:
-    build: ./spark/job  # TODO: Dockerfile for Spark in ./spark/job directory
+  producer:
+    build:
+      context: .
+      dockerfile: ./streamer/dockerfiles/Dockerfile.producer
+    image: producer-app:latest
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=localhost:9092
     depends_on:
       - kafka
+    volumes:
+      - ./data_lake:/app/data_lake
+
+  consumer:
+    build:
+      context: .
+      dockerfile: ./streamer/dockerfiles/Dockerfile.consumer
+    image: consumer-app:latest
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+    command: "--start-date 2013-06-01 --end-date 2015-06-01 --longitude-min -74.0 --longitude-max -73.0 --latitude-min 40.5 --latitude-max 41.0"
+    depends_on:
+      - kafka
+    volumes:
+      - ./data_lake:/app/data_lake
+
+  # spark:
+  #   build: ./spark/job  # TODO: Dockerfile for Spark in ./spark/job directory
+  #   depends_on:
+  #     - kafka
+
+volumes:
+  data_lake:

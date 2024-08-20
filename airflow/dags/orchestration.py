@@ -21,21 +21,29 @@ dag = DAG(
     catchup=False,
 )
 
-# Task 1: Bash task for data ingestion
-data_ingestion = BashOperator(
-    task_id='data_ingestion',
-    bash_command='python ../streamer/producer.py',
+# Task to run the producer container
+producer_task = DockerOperator(
+    task_id='run_producer',
+    image='producer-app:latest',
+    auto_remove=True,
     dag=dag,
+    command='',
+    docker_url='unix://var/run/docker.sock',
+    network_mode='bridge'
 )
 
-# Task 2: Bash task for data ingestion
-data_consumer = BashOperator(
-    task_id='data_consumer',
-    bash_command='python ../streamer/consumer.py --start-date 2013-06-01 --end-date 2015-06-01',
+# Task to run the consumer container with arguments
+consumer_task = DockerOperator(
+    task_id='run_consumer',
+    image='consumer-app:latest',
+    auto_remove=True,
     dag=dag,
+    command='--start-date 2013-06-01 --end-date 2015-06-01 --longitude-min -74.0 --longitude-max -73.0 --latitude-min 40.5 --latitude-max 41.0',
+    docker_url='unix://var/run/docker.sock',
+    network_mode='bridge'
 )
 
-# Task 3: Spark job to process data
+# Task to run the Batch Processing Application (Spark) application
 spark_processing = BashOperator(
     task_id='spark_processing',
     bash_command='spark-submit --class BatchProcessingApp --master local[*] ../spark/target/scala-2.13/datatransformation_2.13-1.0.jar',
@@ -43,4 +51,4 @@ spark_processing = BashOperator(
 )
 
 # Set up dependencies
-data_ingestion >> data_consumer >> spark_processing
+producer_task >> consumer_task >> spark_processing
