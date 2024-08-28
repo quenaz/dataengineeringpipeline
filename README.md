@@ -1,3 +1,6 @@
+### Architecture Design
+![Design](Architecture_Design.png)
+
 ### Solution Design
 
 #### 1. **Architecture Overview**
