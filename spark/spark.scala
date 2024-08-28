@@ -1,3 +1,5 @@
+package com.serasaexperian
+
 import org.apache.spark.sql.{SparkSession, DataFrame}
 import org.apache.spark.sql.functions._
 
@@ -21,7 +23,7 @@ object BatchProcessingApp {
 
   def processBatchData(spark: SparkSession, inputPath: String, outputPath: String): Unit = {
     // Step 1: Read Parquet files from the data lake
-    val rawData: DataFrame = spark.read.parquet(s"$inputPath/")
+    val rawData: DataFrame = spark.read.parquet(s"$inputPath/*/*/*")
 
     // Step 2: Perform data transformations
     val transformedData: DataFrame = rawData
@@ -38,7 +40,6 @@ object BatchProcessingApp {
       )
 
     // Step 4: Write the consolidated data back to the data lake
-    // aggregatedData.write.mode("overwrite").parquet(outputPath)
     // Print schema and some rows to debug
     aggregatedData.printSchema()
     aggregatedData.show(5)

@@ -11,3 +11,4 @@ dataTransformation/
 .bloop/
 .bsp/
 target/
+logs/

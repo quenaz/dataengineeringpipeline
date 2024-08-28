@@ -3,7 +3,7 @@ from kafka import KafkaProducer
 import json
 
 # Load the dataset
-dataset_path = './data/less_data.csv'
+dataset_path = './streamer/data/less_data.csv'
 df = pd.read_csv(dataset_path)
 df.fillna(0, inplace=True)  # Simple example of data cleansing
 

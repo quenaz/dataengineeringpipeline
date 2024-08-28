@@ -4,68 +4,57 @@ import argparse
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
+import pyarrow.compute as pc
 
 from kafka import KafkaConsumer
+from datetime import datetime
+from dateutil import parser
 
-DATA_LAKE_FOLDER='..\\data_lake'
-BATCH_SIZE = 1000
 
-# Ensure the data lake folder exists
-os.makedirs(DATA_LAKE_FOLDER, exist_ok=True)
-
-def get_batch_size_from_poll(consumer, timeout_ms=5000):
+def parse_args():
     """
-    Poll messages from Kafka and return the batch size.
+    Parse command-line arguments for date and location filters.
     """
-    # Poll for a batch of messages
-    msg_batch = consumer.poll(timeout_ms=timeout_ms)
+    parser = argparse.ArgumentParser(description="Filter messages based on date and location.")
+    parser.add_argument("--start-date", type=str, help="Start date for filtering (format: YYYY-MM-DD).")
+    parser.add_argument("--end-date", type=str, help="End date for filtering (format: YYYY-MM-DD).")
+    parser.add_argument("--longitude-min", type=float, help="Minimum longitude for filtering.")
+    parser.add_argument("--longitude-max", type=float, help="Maximum longitude for filtering.")
+    parser.add_argument("--latitude-min", type=float, help="Minimum latitude for filtering.")
+    parser.add_argument("--latitude-max", type=float, help="Maximum latitude for filtering.")
+    return parser.parse_args()
+
+
+def filter_message(message, date_filter=None, location_filter=None):
+    """
+    Filter messages based on either date or location.
+    """
+    # Parse the datetime and remove the timezone information (make it naive)
+    pickup_datetime = parser.parse(message['pickup_datetime']).replace(tzinfo=None)
+    pickup_longitude = message['pickup_longitude']
+    pickup_latitude = message['pickup_latitude']
     
-    # Calculate the total number of messages
-    total_messages = sum(len(messages) for messages in msg_batch.values())
+    # Initialize flags for date and location filtering
+    if date_filter is not None:
+        passed = (date_filter[0] <= pickup_datetime <= date_filter[1])
+    elif location_filter is not None:
+        passed = (
+            location_filter[0] <= pickup_longitude <= location_filter[1] and
+            location_filter[2] <= pickup_latitude <= location_filter[3]
+        )
+    else:
+        passed = True
     
-    return total_messages, msg_batch
+    # Return True if the message meets either the date or location filter
+    return passed
 
-def process_data(messages, date_filter=None, location_filter=None):
+
+def write_to_parquet(df, path):
     """
-    Convert messages to DataFrame, filter data based on provided criteria, and return the DataFrame.
-    """
-    # Create DataFrame from messages
-    records = []
-    for msg in messages:
-        try:
-            data = msg.value
-            records.append(data)
-        except Exception as e:
-            print(f"Error processing message: {e}")
-            continue
-
-    df = pd.DataFrame(records)
-
-    # Convert 'pickup_datetime' to datetime and set timezone to UTC
-    df['pickup_datetime'] = pd.to_datetime(df['pickup_datetime'], errors='coerce')
-
-    # Apply filters
-    if date_filter:
-        start_date, end_date = date_filter
-        # Convert start_date and end_date to timezone-aware datetimes
-        start_date = pd.Timestamp(start_date).tz_localize('UTC')
-        end_date = pd.Timestamp(end_date).tz_localize('UTC')
-        df = df[(df['pickup_datetime'] >= start_date) & (df['pickup_datetime'] <= end_date)]
-    
-    if location_filter:
-        longitude_min, longitude_max, latitude_min, latitude_max = location_filter
-        df = df[(df['pickup_longitude'] >= longitude_min) & (df['pickup_longitude'] <= longitude_max) &
-                (df['pickup_latitude'] >= latitude_min) & (df['pickup_latitude'] <= latitude_max)]
-
-    return df
-
-def save_to_parquet(df, filename):
-    """
-    Save the DataFrame to a Parquet file.
+    Write filtered messages to Parquet files in the data lake structure.
     """
     # Convert the DataFrame to an Apache Arrow Table
     table = pa.Table.from_pandas(df)
-    import pyarrow.compute as pc
 
     # Convert TIMESTAMP(NANOS,true) to TIMESTAMP(MILLIS,true)
     table = table.append_column(
@@ -78,94 +67,99 @@ def save_to_parquet(df, filename):
 
     # Rename the columns
     table = table.rename_columns(new_column_names)
+
+    # Get the current time and format it
+    current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
     
-    # Save to parquet format
-    pq.write_table(table, filename)
+    # Construct the filename with the current time
+    filename = f"data_{current_time}.parquet"
+
+    #pq.write_to_dataset(table, root_path=path, partition_cols=['year', 'month', 'day'])
+    pq.write_table(table, os.path.join(path, filename))
     print(f"Data saved to {filename}")
 
-def main():
 
+def process_messages(messages):
+    """
+    Process a list of messages by filtering and then writing to Parquet files.
+    """
+    # Convert list of dicts to a DataFrame
+    df = pd.DataFrame(messages)
+    
+    # Add partitioning information to the DataFrame
+    df['pickup_datetime'] = pd.to_datetime(df['pickup_datetime'])
+    df['year'] = df['pickup_datetime'].dt.year
+    df['month'] = df['pickup_datetime'].dt.month
+    df['day'] = df['pickup_datetime'].dt.day
+
+    # Define the data lake structure path
+    parquet_path = os.path.join('data_lake', f'{df["year"].iloc[0]}', f'{df["month"].iloc[0]}', f'{df["day"].iloc[0]}')
+    os.makedirs(parquet_path, exist_ok=True)
+
+    # Write the DataFrame to Parquet files in the data lake
+    write_to_parquet(df, parquet_path)
+
+
+def main():
     # Set up command-line argument parsing
-    parser = argparse.ArgumentParser(description='Consume and filter Kafka data.')
-    parser.add_argument('--start-date', type=str, required=False, help='Start date for filtering (YYYY-MM-DD)')
-    parser.add_argument('--end-date', type=str, required=False, help='End date for filtering (YYYY-MM-DD)')
-    parser.add_argument('--longitude-min', type=float, required=False, help='Minimum longitude for filtering')
-    parser.add_argument('--longitude-max', type=float, required=False, help='Maximum longitude for filtering')
-    parser.add_argument('--latitude-min', type=float, required=False, help='Minimum latitude for filtering')
-    parser.add_argument('--latitude-max', type=float, required=False, help='Maximum latitude for filtering')
+    args = parse_args()
     
-    args = parser.parse_args()
-    
-    # Convert command-line arguments to filters
     # Example filter
-    # date_filter = (datetime(2013, 6, 1), datetime(2015, 6, 1))  # Filter by date range
     # --start-date 2013-06-01 --end-date 2015-06-01
-    #
-    # location_filter = (-74.0, -73.0, 40.5, 41.0)  # Filter by longitude and latitude range
     # --longitude-min -74.0 --longitude.max -73.0 --latitude-min 40.5 --latitude-max 41.0
 
+    # Set up date filter if both start_date and end_date are provided
     date_filter = None
     if args.start_date and args.end_date:
-        date_filter = (args.start_date, args.end_date)
-        
+        date_filter = (datetime.strptime(args.start_date, '%Y-%m-%d'), 
+                       datetime.strptime(args.end_date, '%Y-%m-%d'))
+    
+    # Set up location filter if all required location parameters are provided
     location_filter = None
     if args.longitude_min is not None and args.longitude_max is not None and args.latitude_min is not None and args.latitude_max is not None:
         location_filter = (args.longitude_min, args.longitude_max, args.latitude_min, args.latitude_max)
     
-    # Kafka Consumer configuration
+    # Initialize the Kafka consumer
     consumer = KafkaConsumer(
-        'nyc_taxi_fares', # Topic
-        bootstrap_servers=['localhost:9092'], # Host
-        api_version=(2, 6, 0), # API Version
-        max_poll_records=BATCH_SIZE, # Batch size
-        auto_offset_reset='earliest',  # Start reading at the earliest offset
-        enable_auto_commit=True,  # Enable auto commit of offsets
-        group_id='nyc_taxi_fare_group', # Group ID
-        value_deserializer=lambda x: json.loads(x.decode('utf-8'))
+        'nyc_taxi_fares',  # Topic to subscribe to
+        bootstrap_servers=['localhost:9092'], # Kafka host
+        auto_offset_reset='earliest',  # Start reading at the earliest message in the topic
+        enable_auto_commit=True,  # Commit offsets automatically
+        group_id='nyc_taxi_fares_group',  # Consumer group id
+        value_deserializer=lambda x: json.loads(x.decode('utf-8'))  # Deserialize JSON messages
     )
 
-    print("Consuming messages from Kafka topic...")
+    print("Consumer started...")
+
+    filtered_messages = []
 
     try:
-        # Counter
-        COUNTER = 0
+        # Start consuming messages
+        for message in consumer:
+            # Message retrieval, deserialization, and processing
+            message_value = message.value
 
-        while True:
-            # Consume a batch of messages
-            batch_size, messages = get_batch_size_from_poll(consumer)
-            print(f"Batch size: {batch_size}")
+            # Filter the message based on date and location
+            if filter_message(message_value, date_filter, location_filter):
+                filtered_messages.append(message_value)
+                print(f"Message passed filters: {message_value}")
 
-            if not messages:
-                print("No new messages. Exiting.")
-                break
-
-            # Flatten the dictionary of messages
-            message_list = [msg for topic_messages in messages.values() for msg in topic_messages]
-            if not message_list:
-                print("No messages to process.")
-                continue
-
-            filtered_data = process_data(message_list, date_filter=date_filter, location_filter=location_filter)
-
-            if not filtered_data.empty:
-                # Create a filename from the date strings
-                filename = f"data_{COUNTER}_to_{COUNTER+batch_size-1}.parquet"
-
-                print("Generated filename:", filename)
-
-                # Define the path for the Parquet file
-                parquet_file_path = os.path.join(DATA_LAKE_FOLDER, filename)
-
-                # Save the filtered data to a Parquet file
-                save_to_parquet(filtered_data, parquet_file_path)
-
-                # Update counter
-                COUNTER += batch_size
+                # Process batch of messages after a certain number is collected
+                if len(filtered_messages) >= 100:
+                    process_messages(filtered_messages)
+                    filtered_messages.clear()  # Clear the list after processing
 
     except KeyboardInterrupt:
-        print("Stopped consuming messages.")
+        print("Consumer interrupted.")
+    
     finally:
+        # Process any remaining messages
+        if filtered_messages:
+            process_messages(filtered_messages)
+        
+        # Ensure graceful shutdown
         consumer.close()
+        print("Consumer closed.")
 
 if __name__ == "__main__":
     main()
